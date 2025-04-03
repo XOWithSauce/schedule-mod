@@ -97,7 +97,7 @@ def modify_trash_limit(dll_path, limit):
             f.write(trash_crt_pattern)
             print(f"Modified trash creation function at offset {hex(off)} to have max trash limit {actual_limit}")
 
-def permanent_trash_gen(limit: int):
+def permanent_trash_gen(limit):
     path = get_game_assembly_path()
     modify_trash_limit(path, limit)
     return None
