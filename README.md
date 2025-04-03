@@ -6,6 +6,10 @@
 - Permanently disable or re-enable Trash Generation (Does not prevent user or NPC-generated trash from spawning)
 - Executable file built with PyInstaller (see dist folder)
 
+## How To Use
+- Download the executable from Releases section
+- Run the file and choose from the displayed options
+
 ## How to Build from Source
 1. Clone the repository:
    ```sh
