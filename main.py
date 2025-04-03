@@ -5,12 +5,17 @@ import json
 import glob
 import time
 
-# Comparison instruction in the game
+# Comparison instruction in the game - changes max trash limit
 # The first 81 FB is an CMP asm instruction
 # Latter D0 07 00 00 represents 2000 number (compare current trashcount to the number)
 TRASH_LIMIT_PATTERN = bytes([0x81, 0xFB, 0xD0, 0x07, 0x00, 0x00])
 # To revert back to original we have the following memory pattern in the dll file
 TRASH_LIMIT_MOD_PATTERN = bytes([0x81, 0xFB, 0x02, 0x00, 0x00, 0x00])
+
+# For Create trash functions we have 4 offset locations (First 2 are probably CreateTrashBag (offline+online), latter 2 CreateTrash functions)
+# They all share same memory pattern of adding trash to the game so we can override the default 2000 limit with 2
+TRASH_CRT_PATTERN = bytes([0x00, 0x81, 0x78, 0x18, 0xD0, 0x07, 0x00, 0x00])
+TRASH_CRT_MOD_PATTERN = bytes([0x00, 0x81, 0x78, 0x18, 0x02, 0x00, 0x00, 0x00])
 
 """ Region Modify the game assembly dll file """
 
@@ -51,23 +56,46 @@ def find_pattern(dll_path, pattern):
             return None
         return index
 
+def find_all_patterns(dll_path, pattern):
+    with open(dll_path, "rb") as f:
+        data = f.read()
+        indexes = []
+        index = data.find(pattern)
+        while index != -1:
+            indexes.append(index)
+            index = data.find(pattern, index + 1)
+        if not indexes:
+            print(f"Error: The expected pattern was not found in the file.")
+            return None
+        return indexes
+
 # Read and modify the Game Assembly trash pattern
 def modify_trash_limit(dll_path, limit):
-    if limit == 2:
-        offset = find_pattern(dll_path, TRASH_LIMIT_PATTERN)
-    else:
-        offset = find_pattern(dll_path, TRASH_LIMIT_MOD_PATTERN)
-        
-    if offset is None:
+    trash_limit_pattern = TRASH_LIMIT_MOD_PATTERN if limit else TRASH_LIMIT_PATTERN
+    trash_crt_pattern = TRASH_CRT_MOD_PATTERN if limit else TRASH_CRT_PATTERN
+
+    offset = find_pattern(dll_path, trash_limit_pattern)
+    crt_offsets = find_all_patterns(dll_path, trash_crt_pattern)
+
+    if not offset or not crt_offsets:
+        print("Offset not found")
         return
 
+    # Determine the actual limit value (defaulting to 2000 if False)
+    actual_limit = 2 if limit else 2000
+
+    # Write the new limit
     with open(dll_path, "r+b") as f:
         f.seek(offset)
-        # the new limit consists of CMP instruction and 4 byte integer
-        new_limit = b'\x81\xFB' + struct.pack("<H", limit) + b'\x00\x00'
-        f.write(new_limit)
+        f.write(trash_limit_pattern)
+    print(f"Modified at offset {hex(offset)} to set max trash limit to {actual_limit}")
 
-    print(f"Modified {dll_path} at offset {hex(offset)} to set trash limit to {limit}")
+    # Modify trash creation function
+    with open(dll_path, "r+b") as f:
+        for off in crt_offsets:
+            f.seek(off)
+            f.write(trash_crt_pattern)
+            print(f"Modified trash creation function at offset {hex(off)} to have max trash limit {actual_limit}")
 
 def permanent_trash_gen(limit: int):
     path = get_game_assembly_path()
@@ -209,11 +237,11 @@ def main():
                 continue
             
             case "2":
-                permanent_trash_gen(2)
+                permanent_trash_gen(True)
                 continue
             
             case "3":
-                permanent_trash_gen(2000)
+                permanent_trash_gen(False)
                 continue
             
             case "5":
