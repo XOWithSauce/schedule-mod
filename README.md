@@ -2,6 +2,7 @@
 
 ## Compatibility
 Windows - Targets IL2CPP Compiled GameAssembly.dll file
+
 Game Version: Latest
 
 ## Features
