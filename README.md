@@ -4,7 +4,7 @@
 - Basic Command Line Interface
 - Clean trash from `.json` files
 - Permanently disable or re-enable Trash Generation (Does not prevent user or NPC-generated trash from spawning)
-- Executable file built with PyInstaller (see dist folder)
+- Executable file ready to go in Releases (https://github.com/XOWithSauce/schedule-mod/releases/download/v1.0/ScheduleMods.exe)
 
 ## How To Use
 - Download the executable from Releases section
