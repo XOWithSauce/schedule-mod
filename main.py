@@ -69,34 +69,35 @@ def find_all_patterns(dll_path, pattern):
             return None
         return indexes
 
-# Read and modify the Game Assembly trash pattern
 def modify_trash_limit(dll_path, limit):
-    trash_limit_pattern = TRASH_LIMIT_MOD_PATTERN if limit else TRASH_LIMIT_PATTERN
-    trash_crt_pattern = TRASH_CRT_MOD_PATTERN if limit else TRASH_CRT_PATTERN
+    # Choose the correct memory pattern based on limit
+    trash_limit_pattern = TRASH_LIMIT_PATTERN if limit else TRASH_LIMIT_MOD_PATTERN
+    trash_crt_pattern = TRASH_CRT_PATTERN if limit else TRASH_CRT_MOD_PATTERN
 
-    offset = find_pattern(dll_path, trash_limit_pattern)
+    # Find memory locations in the DLL
+    offset = find_pattern(dll_path, trash_limit_pattern)  # Always search for the default pattern
     crt_offsets = find_all_patterns(dll_path, trash_crt_pattern)
 
     if not offset or not crt_offsets:
         print("Offset not found")
         return
 
-    # Determine the actual limit value (defaulting to 2000 if False)
-    actual_limit = 2 if limit else 2000
+    # Determine new limit value (default = 2000, modified = 2)
+    new_limit = 2 if limit else 2000
 
-    # Write the new limit
+    # Modify only the limit bytes in TRASH_LIMIT_PATTERN
     with open(dll_path, "r+b") as f:
-        f.seek(offset)
-        f.write(trash_limit_pattern)
-    print(f"Modified at offset {hex(offset)} to set max trash limit to {actual_limit}")
+        f.seek(offset + 2)  # Skip the `81 FB` instruction, go to the value
+        f.write(struct.pack("<H", new_limit))
+        print(f"Modified at offset {hex(offset)} to set max trash limit to {new_limit}")
 
-    # Modify trash creation function
+    # Modify trash creation functions
     with open(dll_path, "r+b") as f:
         for off in crt_offsets:
-            f.seek(off)
-            f.write(trash_crt_pattern)
-            print(f"Modified trash creation function at offset {hex(off)} to have max trash limit {actual_limit}")
-
+            f.seek(off + 4)  # Skip the first 4 bytes of the pattern
+            f.write(struct.pack("<H", new_limit))
+            print(f"Modified trash creation function at offset {hex(off)} to use limit {new_limit}")
+            
 def permanent_trash_gen(limit):
     path = get_game_assembly_path()
     modify_trash_limit(path, limit)
