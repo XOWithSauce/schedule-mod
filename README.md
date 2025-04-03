@@ -9,8 +9,8 @@
 ## How to Build from Source
 1. Clone the repository:
    ```sh
-   git clone <repository-url>
-   cd <repository-folder>
+   git clone https://github.com/XOWithSauce/schedule-mod.git
+   cd schedule-mod
    ```
 2. Build an executable with PyInstaller:
    ```sh
