@@ -79,8 +79,8 @@ def permanent_trash_gen(limit: int):
 
 def get_saves_directory():
     """Finds the user's save game directory inside AppData/LocalLow/TVGS/Schedule I/Saves"""
-    base_path = os.path.expandvars(r"%LOCALAPPDATA%\Low\TVGS\Schedule I\Saves")
-    
+    base_path = os.path.join(os.path.dirname(os.path.expandvars(r"%APPDATA%")), "LocalLow", "TVGS", "Schedule I")
+    print(base_path)
     if not os.path.exists(base_path):
         print("Error: Could not locate the Saves directory.")
         return None
