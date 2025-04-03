@@ -1,5 +1,9 @@
 # Schedule I Mod Menu
 
+## Compatibility
+Windows - Targets IL2CPP Compiled GameAssembly.dll file
+Game Version: Latest
+
 ## Features
 - Basic Command Line Interface
 - Clean trash from `.json` files
